@@ -88,3 +88,47 @@ export default function SummarAIze() {
     </div>
   );
 }
+<python> from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)  # Enable Cross-Origin Resource Sharing for frontend communication
+
+conversations = {"New Conversation": []}
+active_conversation = "New Conversation"
+
+def get_ai_response(message):
+    # Placeholder AI response function
+    return f"AI response to: {message}"
+
+@app.route('/')
+def index():
+    return jsonify({"message": "SummarAIze API is running."})
+
+@app.route('/send_message', methods=['POST'])
+def send_message():
+    global active_conversation
+    data = request.get_json()
+    message = data.get("message", "").strip()
+    if not message:
+        return jsonify({"error": "Empty message"}), 400
+    
+    user_message = {"role": "user", "content": message}
+    ai_message = {"role": "assistant", "content": get_ai_response(message)}
+    
+    conversations.setdefault(active_conversation, []).append(user_message)
+    conversations[active_conversation].append(ai_message)
+    
+    return jsonify({"reply": ai_message["content"], "messages": conversations[active_conversation]})
+
+@app.route('/new_conversation', methods=['POST'])
+def new_conversation():
+    global active_conversation
+    new_conv_name = f"Conversation {len(conversations) + 1}"
+    conversations[new_conv_name] = []
+    active_conversation = new_conv_name
+    return jsonify({"new_conversation": new_conv_name, "conversations": list(conversations.keys())})
+
+if __name__ == '__main__':
+    app.run(debug=True)
+</python>
