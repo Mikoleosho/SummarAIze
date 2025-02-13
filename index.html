@@ -1,43 +1,84 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SummarAIze</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        #chat-container {
+            width: 50%;
+            margin: auto;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+        #messages {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            padding: 10px;
+            background: #2e2e2e;
+        }
+        #user-input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin-top: 10px;
+            background: #444;
+            color: white;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            background: #6200ea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>SummarAIze</h1>
+    <p>SummarAIze anything</p>
+    <div id="chat-container">
+        <div id="messages"></div>
+        <input type="text" id="user-input" placeholder="Type your message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
 
-app = Flask(__name__)
-CORS(app)  # Enable Cross-Origin Resource Sharing for frontend communication
+    <script>
+        const API_URL = "https://your-backend-url.com/send_message"; // Replace with your hosted Flask API
 
-conversations = {"New Conversation": []}
-active_conversation = "New Conversation"
+        function sendMessage() {
+            const userInput = document.getElementById("user-input").value;
+            if (!userInput.trim()) return;
 
-def get_ai_response(message):
-    # Placeholder AI response function
-    return f"AI response to: {message}"
+            const messagesDiv = document.getElementById("messages");
+            messagesDiv.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
+            document.getElementById("user-input").value = "";
 
-@app.route('/')
-def index():
-    return jsonify({"message": "SummarAIze API is running."})
-
-@app.route('/send_message', methods=['POST'])
-def send_message():
-    global active_conversation
-    data = request.get_json()
-    message = data.get("message", "").strip()
-    if not message:
-        return jsonify({"error": "Empty message"}), 400
-    
-    user_message = {"role": "user", "content": message}
-    ai_message = {"role": "assistant", "content": get_ai_response(message)}
-    
-    conversations.setdefault(active_conversation, []).append(user_message)
-    conversations[active_conversation].append(ai_message)
-    
-    return jsonify({"reply": ai_message["content"], "messages": conversations[active_conversation]})
-
-@app.route('/new_conversation', methods=['POST'])
-def new_conversation():
-    global active_conversation
-    new_conv_name = f"Conversation {len(conversations) + 1}"
-    conversations[new_conv_name] = []
-    active_conversation = new_conv_name
-    return jsonify({"new_conversation": new_conv_name, "conversations": list(conversations.keys())})
-
-if __name__ == '__main__':
-    app.run(debug=True)
+            fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userInput })
+            })
+            .then(response => response.json())
+            .then(data => {
+                messagesDiv.innerHTML += `<p><strong>AI:</strong> ${data.reply}</p>`;
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
+</body>
+</html>
