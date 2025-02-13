@@ -9,9 +9,16 @@
             background-color: #121212;
             color: #ffffff;
             font-family: Arial, sans-serif;
-            text-align: center;
             margin: 0;
             padding: 0;
+        }
+        #navbar {
+            background: #1e1e1e;
+            padding: 10px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.2);
         }
         #chat-container {
             width: 50%;
@@ -20,6 +27,7 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+            margin-top: 20px;
         }
         #messages {
             height: 300px;
@@ -27,6 +35,22 @@
             border: 1px solid #333;
             padding: 10px;
             background: #2e2e2e;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            max-width: 80%;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 5px 0;
+        }
+        .user {
+            background: #6200ea;
+            align-self: flex-end;
+        }
+        .ai {
+            background: #444;
+            align-self: flex-start;
         }
         #user-input {
             width: calc(100% - 22px);
@@ -49,8 +73,7 @@
     </style>
 </head>
 <body>
-    <h1>SummarAIze</h1>
-    <p>SummarAIze anything</p>
+    <div id="navbar">SummarAIze - AI Chat</div>
     <div id="chat-container">
         <div id="messages"></div>
         <input type="text" id="user-input" placeholder="Type your message...">
@@ -58,24 +81,33 @@
     </div>
 
     <script>
-        const API_URL = "https://your-backend-url.com/send_message"; // Replace with your hosted Flask API
+        const API_URL = "https://api.openai.com/v1/chat/completions"; // OpenAI API endpoint
+        const API_KEY = "your-openai-api-key"; // Replace with your OpenAI API key
 
         function sendMessage() {
             const userInput = document.getElementById("user-input").value;
             if (!userInput.trim()) return;
 
             const messagesDiv = document.getElementById("messages");
-            messagesDiv.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
+            messagesDiv.innerHTML += `<div class='message user'><strong>You:</strong> ${userInput}</div>`;
             document.getElementById("user-input").value = "";
 
             fetch(API_URL, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: userInput })
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: "gpt-3.5-turbo",
+                    messages: [{ role: "user", content: userInput }]
+                })
             })
             .then(response => response.json())
             .then(data => {
-                messagesDiv.innerHTML += `<p><strong>AI:</strong> ${data.reply}</p>`;
+                const aiResponse = data.choices[0].message.content;
+                messagesDiv.innerHTML += `<div class='message ai'><strong>AI:</strong> ${aiResponse}</div>`;
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
             })
             .catch(error => console.error("Error:", error));
         }
